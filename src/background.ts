@@ -60,7 +60,26 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
       'extensions',
       'exclude',
     ]);
-    let exts = ['py', 'go', 'md', 'txt'];
+    let exts = [
+      'py',
+      'js',
+      'ts',
+      'jsx',
+      'tsx',
+      'go',
+      'java',
+      'c',
+      'cpp',
+      'cs',
+      'rb',
+      'rs',
+      'php',
+      'kt',
+      'swift',
+      'sh',
+      'md',
+      'txt',
+    ];
     if (typeof extensions === 'string' && extensions.trim()) {
       exts = extensions
         .split(/\s+/)
@@ -69,7 +88,13 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
     }
     const extRegex = new RegExp(`\.(${exts.map((e) => e.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|')})$`, 'i');
 
-    let excludeGlobs: string[] = [];
+    let excludeGlobs: string[] = [
+      '.vscode/**',
+      '.github/**',
+      'node_modules/**',
+      'dist/**',
+      'build/**',
+    ];
     if (typeof exclude === 'string' && exclude.trim()) {
       excludeGlobs = exclude
         .split(/\r?\n/)
