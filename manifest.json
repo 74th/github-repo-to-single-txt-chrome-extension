@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "GitHub Repo Single Text Exporter",
+  "version": "1.0",
+  "description": "Download GitHub repo zip, collect certain files, and export a single txt for NotebookLM.",
+  "permissions": ["downloads", "scripting", "activeTab"],
+  "host_permissions": [
+    "https://github.com/*",
+    "https://codeload.github.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Export repo text"
+  }
+}
