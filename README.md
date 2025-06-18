@@ -5,6 +5,12 @@ This Chrome extension downloads the current GitHub repository as a ZIP file, ext
 Click the extension icon while viewing a GitHub repository to download the text file. The repository is fetched from
 `https://codeload.github.com/<owner>/<repo>/zip/refs/heads/main`, and this URL is logged to the extension's service worker console.
 
+## Private Repositories
+
+To access private repositories the extension requires a GitHub Personal Access Token (PAT) with at least the `repo` scope.
+When the extension is first used it will prompt for a token, which is stored locally using Chrome storage. The token is
+sent in the `Authorization` header when downloading the repository archive.
+
 ## Building
 
 The source is written in TypeScript and bundled with [esbuild](https://esbuild.github.io/). Run the following commands to build and package the extension:
