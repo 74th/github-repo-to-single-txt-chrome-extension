@@ -1,9 +1,9 @@
-chrome.action.onClicked.addListener(async (tab) => {
+chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
   try {
     const pageUrl = new URL(tab.url || '');
     if (pageUrl.hostname !== 'github.com') {
       await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
+        target: { tabId: tab.id! },
         func: () => alert('This is not a GitHub page.'),
       });
       return;
@@ -12,7 +12,7 @@ chrome.action.onClicked.addListener(async (tab) => {
     const parts = pageUrl.pathname.split('/').filter(Boolean);
     if (parts.length < 2) {
       await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
+        target: { tabId: tab.id! },
         func: () => alert('Cannot determine repository.'),
       });
       return;
@@ -20,11 +20,10 @@ chrome.action.onClicked.addListener(async (tab) => {
     const owner = parts[0];
     const repo = parts[1];
 
-    // Try to grab the download ZIP link from the page
-    const [{ result: zipLink }] = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
+    const [{ result: zipLink }] = await chrome.scripting.executeScript<{ result: string | null }>({
+      target: { tabId: tab.id! },
       func: () => {
-        const el = document.querySelector('get-repo details-menu a[href*="/zip/"]');
+        const el = document.querySelector<HTMLAnchorElement>('get-repo details-menu a[href*="/zip/"]');
         return el ? el.href : null;
       },
     });
@@ -34,11 +33,12 @@ chrome.action.onClicked.addListener(async (tab) => {
     if (!response.ok) throw new Error('Failed to download ZIP');
     const blob = await response.blob();
 
-    const { default: JSZip } = await import(chrome.runtime.getURL('jszip.min.js'));
+    const JSZip = (await import('jszip')).default;
     const zip = await JSZip.loadAsync(blob);
 
-    const entries = [];
-    zip.forEach((relativePath, zipEntry) => {
+    interface Entry { path: string; file: any; }
+    const entries: Entry[] = [];
+    zip.forEach((relativePath: string, zipEntry: any) => {
       if (zipEntry.dir) return;
       if (!/\.(py|go|md|txt)$/i.test(relativePath)) return;
       entries.push({ path: relativePath, file: zipEntry });
@@ -60,10 +60,10 @@ chrome.action.onClicked.addListener(async (tab) => {
     const outBlob = new Blob([output], { type: 'text/plain' });
     const urlObj = URL.createObjectURL(outBlob);
     chrome.downloads.download({ url: urlObj, filename: `${repo}.txt`, saveAs: true });
-  } catch (err) {
+  } catch (err: any) {
     await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: (msg) => alert(msg),
+      target: { tabId: tab.id! },
+      func: (msg: string) => alert(msg),
       args: [err.message],
     });
   }
