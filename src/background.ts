@@ -20,7 +20,7 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
     const owner = parts[0];
     const repo = parts[1];
 
-    const zipUrl = `https://codeload.github.com/${owner}/${repo}/zip/refs/heads/main.zip`;
+    const zipUrl = `https://codeload.github.com/${owner}/${repo}/zip/refs/heads/main`;
     console.log('ZIP download URL:', zipUrl);
 
     const response = await fetch(zipUrl);
