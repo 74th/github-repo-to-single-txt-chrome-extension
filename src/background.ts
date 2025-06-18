@@ -20,17 +20,13 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
     const owner = parts[0];
     const repo = parts[1];
 
-    const [{ result: zipLink }] = await chrome.scripting.executeScript<{ result: string | null }>({
-      target: { tabId: tab.id! },
-      func: () => {
-        const el = document.querySelector<HTMLAnchorElement>('get-repo details-menu a[href*="/zip/"]');
-        return el ? el.href : null;
-      },
-    });
+    const zipUrl = `https://codeload.github.com/${owner}/${repo}/zip/refs/heads/main.zip`;
+    console.log('ZIP download URL:', zipUrl);
 
-    const zipUrl = zipLink || `https://codeload.github.com/${owner}/${repo}/zip/refs/heads/main`;
     const response = await fetch(zipUrl);
-    if (!response.ok) throw new Error('Failed to download ZIP');
+    if (!response.ok) {
+      throw new Error(`Failed to download ZIP: ${response.status} ${response.statusText}`);
+    }
     const blob = await response.blob();
 
     const JSZip = (await import('jszip')).default;
