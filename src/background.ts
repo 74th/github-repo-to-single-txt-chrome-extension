@@ -1,3 +1,20 @@
+async function getToken(tabId: number): Promise<string | undefined> {
+  const stored = await chrome.storage.local.get('token');
+  if (stored.token) return stored.token as string;
+  const [{ result }] = await chrome.scripting.executeScript({
+    target: { tabId },
+    func: () =>
+      prompt(
+        'Enter GitHub Personal Access Token (used for private repos). This will be stored locally:'
+      ),
+  });
+  if (result) {
+    await chrome.storage.local.set({ token: result });
+    return result as string;
+  }
+  return undefined;
+}
+
 chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
   try {
     const pageUrl = new URL(tab.url || '');
@@ -23,7 +40,12 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
     const zipUrl = `https://codeload.github.com/${owner}/${repo}/zip/refs/heads/main`;
     console.log('ZIP download URL:', zipUrl);
 
-    const response = await fetch(zipUrl);
+    const token = await getToken(tab.id!);
+
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `token ${token}`;
+
+    const response = await fetch(zipUrl, { headers });
     if (!response.ok) {
       throw new Error(`Failed to download ZIP: ${response.status} ${response.statusText}`);
     }
