@@ -1,14 +1,20 @@
-async function loadExts() {
-  const { extensions } = await chrome.storage.local.get('extensions');
-  const textarea = document.getElementById('exts') as HTMLTextAreaElement;
-  textarea.value = (extensions || 'py\ngo\nmd\ntxt');
+async function loadOptions() {
+  const { extensions, exclude } = await chrome.storage.local.get([
+    'extensions',
+    'exclude',
+  ]);
+  const extArea = document.getElementById('exts') as HTMLTextAreaElement;
+  extArea.value = extensions || 'py\ngo\nmd\ntxt';
+  const exArea = document.getElementById('exclude') as HTMLTextAreaElement;
+  exArea.value = exclude || '';
 }
 
-async function saveExts() {
-  const textarea = document.getElementById('exts') as HTMLTextAreaElement;
-  await chrome.storage.local.set({ extensions: textarea.value });
+async function saveOptions() {
+  const extArea = document.getElementById('exts') as HTMLTextAreaElement;
+  const exArea = document.getElementById('exclude') as HTMLTextAreaElement;
+  await chrome.storage.local.set({ extensions: extArea.value, exclude: exArea.value });
   alert('Saved');
 }
 
-document.getElementById('save')!.addEventListener('click', saveExts);
-loadExts();
+document.getElementById('save')!.addEventListener('click', saveOptions);
+loadOptions();

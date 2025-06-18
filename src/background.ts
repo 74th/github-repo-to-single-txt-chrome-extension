@@ -1,3 +1,5 @@
+import { minimatch } from 'minimatch';
+
 async function getToken(tabId: number): Promise<string | undefined> {
   const stored = await chrome.storage.local.get('token');
   if (stored.token) return stored.token as string;
@@ -54,7 +56,10 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
     const JSZip = (await import('jszip')).default;
     const zip = await JSZip.loadAsync(blob);
 
-    const { extensions } = await chrome.storage.local.get('extensions');
+    const { extensions, exclude } = await chrome.storage.local.get([
+      'extensions',
+      'exclude',
+    ]);
     let exts = ['py', 'go', 'md', 'txt'];
     if (typeof extensions === 'string' && extensions.trim()) {
       exts = extensions
@@ -64,11 +69,20 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
     }
     const extRegex = new RegExp(`\.(${exts.map((e) => e.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|')})$`, 'i');
 
+    let excludeGlobs: string[] = [];
+    if (typeof exclude === 'string' && exclude.trim()) {
+      excludeGlobs = exclude
+        .split(/\r?\n/)
+        .map((e: string) => e.trim())
+        .filter(Boolean);
+    }
+
     interface Entry { path: string; file: any; }
     const entries: Entry[] = [];
     zip.forEach((relativePath: string, zipEntry: any) => {
       if (zipEntry.dir) return;
       if (!extRegex.test(relativePath)) return;
+      if (excludeGlobs.some((p) => minimatch(relativePath, p))) return;
       entries.push({ path: relativePath, file: zipEntry });
     });
 

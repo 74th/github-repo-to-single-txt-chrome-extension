@@ -11,7 +11,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "jszip": "^3.10.1"
+    "jszip": "^3.10.1",
+    "minimatch": "^10.0.3"
   },
   "devDependencies": {
     "esbuild": "^0.25.5"
