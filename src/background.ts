@@ -106,9 +106,10 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
     const entries: Entry[] = [];
     zip.forEach((relativePath: string, zipEntry: any) => {
       if (zipEntry.dir) return;
-      if (!extRegex.test(relativePath)) return;
-      if (excludeGlobs.some((p) => minimatch(relativePath, p))) return;
-      entries.push({ path: relativePath, file: zipEntry });
+      const trimmed = relativePath.replace(/^[^/]+\//, '');
+      if (!extRegex.test(trimmed)) return;
+      if (excludeGlobs.some((p) => minimatch(trimmed, p))) return;
+      entries.push({ path: trimmed, file: zipEntry });
     });
 
     const readmeIndex = entries.findIndex((e) => /(^|\/)README\.md$/i.test(e.path));

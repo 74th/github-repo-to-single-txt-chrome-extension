@@ -9,6 +9,8 @@ Use the Options page to specify which file extensions should be collected when e
 ### Exclude Files
 
 The Options page also lets you specify glob patterns for files to omit from the export. By default `.vscode/**`, `.github/**`, `node_modules/**`, `dist/**`, and `build/**` are excluded. Enter one pattern per line using [minimatch](https://github.com/isaacs/minimatch) syntax to customise the list.
+Paths are matched relative to the repository root and the `file:` sections in the
+output use these same relative paths.
 
 Click the extension icon while viewing a GitHub repository to download the text file. The repository is fetched from
 `https://codeload.github.com/<owner>/<repo>/zip/refs/heads/main`, and this URL is logged to the extension's service worker console.
