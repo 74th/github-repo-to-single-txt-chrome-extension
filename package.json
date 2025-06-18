@@ -4,8 +4,8 @@
   "description": "This Chrome extension downloads the current GitHub repository as a ZIP file, extracts `.py`, `.go`, `.md`, and `.txt` files, and combines them into a single text file. If `README.md` exists it is placed first, followed by the remaining files in alphabetical order.",
   "type": "module",
   "scripts": {
-    "build": "esbuild src/background.ts --bundle --platform=browser --target=es2017 --format=esm --outfile=dist/background.js",
-    "package": "npm run build && cp manifest.json dist/ && cd dist && zip -r ../extension.zip ."
+    "build": "esbuild src/background.ts src/options.ts --bundle --platform=browser --target=es2017 --format=esm --outdir=dist",
+    "package": "npm run build && cp manifest.json options.html dist/ && cd dist && zip -r ../extension.zip ."
   },
   "keywords": [],
   "author": "",

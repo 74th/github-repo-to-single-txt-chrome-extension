@@ -54,11 +54,21 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
     const JSZip = (await import('jszip')).default;
     const zip = await JSZip.loadAsync(blob);
 
+    const { extensions } = await chrome.storage.local.get('extensions');
+    let exts = ['py', 'go', 'md', 'txt'];
+    if (typeof extensions === 'string' && extensions.trim()) {
+      exts = extensions
+        .split(/\s+/)
+        .map((e: string) => e.replace(/^\./, '').trim())
+        .filter(Boolean);
+    }
+    const extRegex = new RegExp(`\.(${exts.map((e) => e.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|')})$`, 'i');
+
     interface Entry { path: string; file: any; }
     const entries: Entry[] = [];
     zip.forEach((relativePath: string, zipEntry: any) => {
       if (zipEntry.dir) return;
-      if (!/\.(py|go|md|txt)$/i.test(relativePath)) return;
+      if (!extRegex.test(relativePath)) return;
       entries.push({ path: relativePath, file: zipEntry });
     });
 
