@@ -1,14 +1,14 @@
 # GitHub Repo Single Text Exporter
 
-This Chrome extension downloads the current GitHub repository as a ZIP file, extracts text-based files, and combines them into a single file. By default `.py`, `.go`, `.md`, and `.txt` files are included. If `README.md` exists it is placed first, followed by the remaining files in alphabetical order. The list of extensions can be customised from the extension's options page.
+This Chrome extension downloads the current GitHub repository as a ZIP file, extracts text-based files, and combines them into a single file. By default common programming languages are included such as `.py`, `.js`, `.ts`, `.jsx`, `.tsx`, `.go`, `.java`, `.c`, `.cpp`, `.cs`, `.rb`, `.rs`, `.php`, `.kt`, `.swift`, `.sh`, `.md`, and `.txt`. If `README.md` exists it is placed first, followed by the remaining files in alphabetical order. The list of extensions can be customised from the extension's options page.
 
 ## Custom File Extensions
 
-Use the Options page to specify which file extensions should be collected when exporting a repository. Enter one extension per line; if no value is provided the default list (`py`, `go`, `md`, `txt`) is used.
+Use the Options page to specify which file extensions should be collected when exporting a repository. Enter one extension per line; if no value is provided the default list is used (`py`, `js`, `ts`, `jsx`, `tsx`, `go`, `java`, `c`, `cpp`, `cs`, `rb`, `rs`, `php`, `kt`, `swift`, `sh`, `md`, `txt`).
 
 ### Exclude Files
 
-The Options page also lets you specify glob patterns for files to omit from the export. Enter one pattern per line using [minimatch](https://github.com/isaacs/minimatch) syntax.
+The Options page also lets you specify glob patterns for files to omit from the export. By default `.vscode/**`, `.github/**`, `node_modules/**`, `dist/**`, and `build/**` are excluded. Enter one pattern per line using [minimatch](https://github.com/isaacs/minimatch) syntax to customise the list.
 
 Click the extension icon while viewing a GitHub repository to download the text file. The repository is fetched from
 `https://codeload.github.com/<owner>/<repo>/zip/refs/heads/main`, and this URL is logged to the extension's service worker console.

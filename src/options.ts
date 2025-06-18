@@ -4,9 +4,13 @@ async function loadOptions() {
     'exclude',
   ]);
   const extArea = document.getElementById('exts') as HTMLTextAreaElement;
-  extArea.value = extensions || 'py\ngo\nmd\ntxt';
+  extArea.value =
+    extensions ||
+    'py\njs\nts\njsx\ntsx\ngo\njava\nc\ncpp\ncs\nrb\nrs\nphp\nkt\nswift\nsh\nmd\ntxt';
   const exArea = document.getElementById('exclude') as HTMLTextAreaElement;
-  exArea.value = exclude || '';
+  exArea.value =
+    exclude ||
+    '.vscode/**\n.github/**\nnode_modules/**\ndist/**\nbuild/**';
 }
 
 async function saveOptions() {
