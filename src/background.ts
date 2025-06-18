@@ -20,7 +20,7 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
     const owner = parts[0];
     const repo = parts[1];
 
-    const zipUrl = `https://codeload.github.com/${owner}/${repo}/zip/refs/heads/main.zip`;
+    const zipUrl = `https://github.com/${owner}/${repo}/archive/refs/heads/main.zip`;
     console.log('ZIP download URL:', zipUrl);
 
     const response = await fetch(zipUrl);
@@ -54,8 +54,18 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
     }
 
     const outBlob = new Blob([output], { type: 'text/plain' });
-    const urlObj = URL.createObjectURL(outBlob);
-    chrome.downloads.download({ url: urlObj, filename: `${repo}.txt`, saveAs: true });
+    let downloadUrl: string;
+    if (typeof URL.createObjectURL === 'function') {
+      downloadUrl = URL.createObjectURL(outBlob);
+    } else {
+      const buf = await outBlob.arrayBuffer();
+      let binary = '';
+      const bytes = new Uint8Array(buf);
+      for (const b of bytes) binary += String.fromCharCode(b);
+      const base64 = btoa(binary);
+      downloadUrl = `data:text/plain;base64,${base64}`;
+    }
+    chrome.downloads.download({ url: downloadUrl, filename: `${repo}.txt`, saveAs: true });
   } catch (err: any) {
     await chrome.scripting.executeScript({
       target: { tabId: tab.id! },

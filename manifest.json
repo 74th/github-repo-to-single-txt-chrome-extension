@@ -5,8 +5,7 @@
   "description": "Download GitHub repo zip, collect certain files, and export a single txt for NotebookLM.",
   "permissions": ["downloads", "scripting", "activeTab"],
   "host_permissions": [
-    "https://github.com/*",
-    "https://codeload.github.com/*"
+    "https://github.com/*"
   ],
   "background": {
     "service_worker": "background.js",
