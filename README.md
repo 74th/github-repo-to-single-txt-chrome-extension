@@ -6,6 +6,10 @@ This Chrome extension downloads the current GitHub repository as a ZIP file, ext
 
 Use the Options page to specify which file extensions should be collected when exporting a repository. Enter one extension per line; if no value is provided the default list (`py`, `go`, `md`, `txt`) is used.
 
+### Exclude Files
+
+The Options page also lets you specify glob patterns for files to omit from the export. Enter one pattern per line using [minimatch](https://github.com/isaacs/minimatch) syntax.
+
 Click the extension icon while viewing a GitHub repository to download the text file. The repository is fetched from
 `https://codeload.github.com/<owner>/<repo>/zip/refs/heads/main`, and this URL is logged to the extension's service worker console.
 
