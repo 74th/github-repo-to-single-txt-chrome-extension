@@ -39,13 +39,29 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
     const owner = parts[0];
     const repo = parts[1];
 
-    const zipUrl = `https://codeload.github.com/${owner}/${repo}/zip/refs/heads/main`;
-    console.log('ZIP download URL:', zipUrl);
-
     const token = await getToken(tab.id!);
 
     const headers: Record<string, string> = {};
     if (token) headers['Authorization'] = `token ${token}`;
+
+    const repoInfoRes = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}`,
+      { headers }
+    );
+    if (!repoInfoRes.ok) {
+      throw new Error(
+        `Failed to fetch repo info: ${repoInfoRes.status} ${repoInfoRes.statusText}`
+      );
+    }
+    const repoInfo = await repoInfoRes.json();
+
+    let branch =
+      (parts[2] === 'tree' || parts[2] === 'blob') && parts[3]
+        ? parts[3]
+        : pageUrl.searchParams.get('ref') || repoInfo.default_branch;
+
+    const zipUrl = `https://codeload.github.com/${owner}/${repo}/zip/refs/heads/${branch}`;
+    console.log('ZIP download URL:', zipUrl);
 
     const response = await fetch(zipUrl, { headers });
     if (!response.ok) {
@@ -119,7 +135,7 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
       entries.unshift(readme);
     }
 
-    let output = `${repo}\n\n`;
+    let output = `${repoInfo.full_name}\n${repoInfo.description || ''}\n\n`;
     for (const entry of entries) {
       const text = await entry.file.async('text');
       output += `---\nfile: ${entry.path}\n---\n${text}\n\n`;
