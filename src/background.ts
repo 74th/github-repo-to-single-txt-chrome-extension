@@ -55,10 +55,22 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
     }
     const repoInfo = await repoInfoRes.json();
 
-    let branch =
-      (parts[2] === 'tree' || parts[2] === 'blob') && parts[3]
-        ? parts[3]
-        : pageUrl.searchParams.get('ref') || repoInfo.default_branch;
+    let branch = pageUrl.searchParams.get('ref') || repoInfo.default_branch;
+
+    if ((parts[2] === 'tree' || parts[2] === 'blob') && parts[3]) {
+      const rest = parts.slice(3);
+      for (let i = rest.length; i >= 1; i--) {
+        const cand = rest.slice(0, i).join('/');
+        const res = await fetch(
+          `https://api.github.com/repos/${owner}/${repo}/branches/${encodeURIComponent(cand)}`,
+          { headers }
+        );
+        if (res.ok) {
+          branch = cand;
+          break;
+        }
+      }
+    }
 
     const zipUrl = `https://codeload.github.com/${owner}/${repo}/zip/refs/heads/${branch}`;
     console.log('ZIP download URL:', zipUrl);
