@@ -81,7 +81,31 @@ export async function extractTextFromZip(
 
   const ordered = collect(rootNode, '');
 
-  let output = `${repoInfo.full_name}\n${repoInfo.description || ''}\n\n`;
+  function buildTreeLines(node: Node, prefix = ''): string[] {
+    const files = node.files
+      .map((e) => e.path.split('/').pop()!)
+      .sort((a, b) => a.localeCompare(b));
+    const dirs = Array.from(node.dirs.keys()).sort((a, b) => a.localeCompare(b));
+    const items = [
+      ...files.map((name) => ({ name, child: undefined as Node | undefined })),
+      ...dirs.map((name) => ({ name, child: node.dirs.get(name)! })),
+    ].sort((a, b) => a.name.localeCompare(b.name));
+    const lines: string[] = [];
+    items.forEach((item, idx) => {
+      const isLast = idx === items.length - 1;
+      const branch = isLast ? '└── ' : '├── ';
+      lines.push(`${prefix}${branch}${item.name}`);
+      if (item.child) {
+        const childPrefix = prefix + (isLast ? '    ' : '│   ');
+        lines.push(...buildTreeLines(item.child, childPrefix));
+      }
+    });
+    return lines;
+  }
+
+  const treeLines = ['.', ...buildTreeLines(rootNode)];
+
+  let output = `${repoInfo.full_name}\n${repoInfo.description || ''}\n\n${treeLines.join('\n')}\n\n`;
   for (const entry of ordered) {
     const text = await entry.file.async('text');
     output += `---\nfile: ${entry.path}\n---\n${text}\n\n`;
