@@ -5,6 +5,9 @@ on:
     tags:
       - '*.*.*'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -19,4 +22,3 @@ jobs:
       - uses: softprops/action-gh-release@v1
         with:
           files: github-repo-to-single-txt-extension.zip
-
