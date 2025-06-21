@@ -14,11 +14,16 @@
     "type": "module"
   },
   "options_ui": {
-    "page": "options.html",
+    "page": "html/options.html",
     "open_in_tab": true
   },
   "action": {
     "default_title": "Export repo text",
-    "default_popup": "popup.html"
+    "default_popup": "html/popup.html"
+  },
+  "icons": {
+    "128": "icons/icon-128.png",
+    "64": "icons/icon-64.png",
+    "32": "icons/icon-32.png"
   }
 }
