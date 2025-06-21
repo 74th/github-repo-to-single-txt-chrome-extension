@@ -24,6 +24,7 @@ async function init() {
 
   const extArea = document.getElementById('exts') as HTMLTextAreaElement;
   const exArea = document.getElementById('exclude') as HTMLTextAreaElement;
+  const incArea = document.getElementById('include') as HTMLTextAreaElement;
 
   const repoVals = (repoSettings && repoSettings[repoFull]) || {};
   extArea.value =
@@ -34,18 +35,21 @@ async function init() {
     repoVals.exclude ||
     exclude ||
     '.vscode/**\n.github/**\nnode_modules/**\ndist/**\nbuild/**';
+  incArea.value = repoVals.include || '';
 
   document.getElementById('extract')?.addEventListener('click', async () => {
     const newExts = extArea.value;
     const newEx = exArea.value;
+    const newInc = incArea.value;
     const updated = { ...(repoSettings || {}) } as Record<string, any>;
-    updated[repoFull] = { extensions: newExts, exclude: newEx };
+    updated[repoFull] = { extensions: newExts, exclude: newEx, include: newInc };
     await chrome.storage.local.set({ repoSettings: updated });
     await chrome.runtime.sendMessage({
       action: 'extract',
       tabId: tab.id,
       extensions: newExts,
       exclude: newEx,
+      include: newInc,
     });
     window.close();
   });

@@ -79,3 +79,29 @@ test('file tree is printed at top of output', async () => {
     '    └── a.js',
   ]);
 });
+
+test('include glob overrides extension filter', async () => {
+  const zip = new JSZip();
+  zip.file('repo-main/script.special', 'aaa');
+
+  const output = await extractTextFromZip(zip, repoInfo, ['js'], [], [
+    '**/*.special',
+  ]);
+
+  assert.match(output, /file: script\.special/);
+});
+
+test('exclude globs take priority over include globs', async () => {
+  const zip = new JSZip();
+  zip.file('repo-main/src/file.txt', 'aaa');
+
+  const output = await extractTextFromZip(
+    zip,
+    repoInfo,
+    ['txt'],
+    ['src/**'],
+    ['src/file.txt']
+  );
+
+  assert.equal(/file:/.test(output), false);
+});
