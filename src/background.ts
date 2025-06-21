@@ -17,7 +17,11 @@ async function getToken(tabId: number): Promise<string | undefined> {
   return undefined;
 }
 
-chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
+async function runExtraction(
+  tab: chrome.tabs.Tab,
+  extValue: string,
+  excludeValue: string
+) {
   try {
     const pageUrl = new URL(tab.url || '');
     if (pageUrl.hostname !== 'github.com') {
@@ -84,10 +88,6 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
     const JSZip = (await import('jszip')).default;
     const zip = await JSZip.loadAsync(blob);
 
-    const { extensions, exclude } = await chrome.storage.local.get([
-      'extensions',
-      'exclude',
-    ]);
     let exts = [
       'py',
       'js',
@@ -108,8 +108,8 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
       'md',
       'txt',
     ];
-    if (typeof extensions === 'string' && extensions.trim()) {
-      exts = extensions
+    if (typeof extValue === 'string' && extValue.trim()) {
+      exts = extValue
         .split(/\s+/)
         .map((e: string) => e.replace(/^\./, '').trim())
         .filter(Boolean);
@@ -121,8 +121,8 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
       'dist/**',
       'build/**',
     ];
-    if (typeof exclude === 'string' && exclude.trim()) {
-      excludeGlobs = exclude
+    if (typeof excludeValue === 'string' && excludeValue.trim()) {
+      excludeGlobs = excludeValue
         .split(/\r?\n/)
         .map((e: string) => e.trim())
         .filter(Boolean);
@@ -148,6 +148,15 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
       target: { tabId: tab.id! },
       func: (msg: string) => alert(msg),
       args: [err.message],
+    });
+  }
+}
+
+chrome.runtime.onMessage.addListener((msg, sender) => {
+  if (msg.action === 'extract' && typeof msg.tabId === 'number') {
+    chrome.tabs.get(msg.tabId, (tab) => {
+      if (chrome.runtime.lastError || !tab) return;
+      runExtraction(tab, msg.extensions, msg.exclude);
     });
   }
 });

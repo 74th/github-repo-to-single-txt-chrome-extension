@@ -18,6 +18,7 @@
     "open_in_tab": true
   },
   "action": {
-    "default_title": "Export repo text"
+    "default_title": "Export repo text",
+    "default_popup": "popup.html"
   }
 }
