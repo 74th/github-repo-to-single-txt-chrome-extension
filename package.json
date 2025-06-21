@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "esbuild src/background.ts src/options.ts --bundle --platform=browser --target=es2017 --format=esm --outdir=dist",
-    "package": "npm run build && cp manifest.json options.html dist/ && cd dist && zip -r ../extension.zip ."
+    "package": "npm run build && cp manifest.json options.html dist/ && cd dist && zip -r ../extension.zip .",
+    "test": "node --loader ts-node/esm --test test/extractTextFromZip.test.ts"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +16,8 @@
     "minimatch": "^10.0.3"
   },
   "devDependencies": {
-    "esbuild": "^0.25.5"
+    "@types/node": "^24.0.3",
+    "esbuild": "^0.25.5",
+    "ts-node": "^10.9.2"
   }
 }
