@@ -44,3 +44,21 @@ test('subdirectory README placed before other files in that directory', async ()
   const files = Array.from(output.matchAll(/file: ([^\n]+)/g)).map((m) => m[1]);
   assert.deepEqual(files, ['sub/README.md', 'sub/a.js', 'sub/b.js']);
 });
+
+test('deeply nested README placed before files under that directory', async () => {
+  const zip = new JSZip();
+  zip.file('repo-main/a/b/c/file.js', 'content');
+  zip.file('repo-main/a/b/README.md', 'readme b');
+  zip.file('repo-main/a/b/c/README.md', 'readme c');
+  zip.file('repo-main/README.md', 'root');
+
+  const output = await extractTextFromZip(zip, repoInfo, ['js', 'md'], []);
+
+  const files = Array.from(output.matchAll(/file: ([^\n]+)/g)).map((m) => m[1]);
+  assert.deepEqual(files, [
+    'README.md',
+    'a/b/README.md',
+    'a/b/c/README.md',
+    'a/b/c/file.js',
+  ]);
+});
