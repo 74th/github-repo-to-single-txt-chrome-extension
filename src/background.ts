@@ -1,4 +1,4 @@
-import { minimatch } from 'minimatch';
+import { extractTextFromZip } from './zipUtils.js';
 
 async function getToken(tabId: number): Promise<string | undefined> {
   const stored = await chrome.storage.local.get('token');
@@ -114,8 +114,6 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
         .map((e: string) => e.replace(/^\./, '').trim())
         .filter(Boolean);
     }
-    const extRegex = new RegExp(`\.(${exts.map((e) => e.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|')})$`, 'i');
-
     let excludeGlobs: string[] = [
       '.vscode/**',
       '.github/**',
@@ -130,28 +128,7 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
         .filter(Boolean);
     }
 
-    interface Entry { path: string; file: any; }
-    const entries: Entry[] = [];
-    zip.forEach((relativePath: string, zipEntry: any) => {
-      if (zipEntry.dir) return;
-      const trimmed = relativePath.replace(/^[^/]+\//, '');
-      if (!extRegex.test(trimmed)) return;
-      if (excludeGlobs.some((p) => minimatch(trimmed, p))) return;
-      entries.push({ path: trimmed, file: zipEntry });
-    });
-
-    const readmeIndex = entries.findIndex((e) => /(^|\/)README\.md$/i.test(e.path));
-    entries.sort((a, b) => a.path.localeCompare(b.path));
-    if (readmeIndex >= 0) {
-      const [readme] = entries.splice(readmeIndex, 1);
-      entries.unshift(readme);
-    }
-
-    let output = `${repoInfo.full_name}\n${repoInfo.description || ''}\n\n`;
-    for (const entry of entries) {
-      const text = await entry.file.async('text');
-      output += `---\nfile: ${entry.path}\n---\n${text}\n\n`;
-    }
+    const output = await extractTextFromZip(zip, repoInfo, exts, excludeGlobs);
 
     const outBlob = new Blob([output], { type: 'text/plain' });
     let downloadUrl: string;
