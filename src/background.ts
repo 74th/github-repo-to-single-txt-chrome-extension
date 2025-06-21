@@ -20,7 +20,8 @@ async function getToken(tabId: number): Promise<string | undefined> {
 async function runExtraction(
   tab: chrome.tabs.Tab,
   extValue: string,
-  excludeValue: string
+  excludeValue: string,
+  includeValue: string
 ) {
   try {
     const pageUrl = new URL(tab.url || '');
@@ -127,8 +128,21 @@ async function runExtraction(
         .map((e: string) => e.trim())
         .filter(Boolean);
     }
+    let includeGlobs: string[] = [];
+    if (typeof includeValue === 'string' && includeValue.trim()) {
+      includeGlobs = includeValue
+        .split(/\r?\n/)
+        .map((e: string) => e.trim())
+        .filter(Boolean);
+    }
 
-    const output = await extractTextFromZip(zip, repoInfo, exts, excludeGlobs);
+    const output = await extractTextFromZip(
+      zip,
+      repoInfo,
+      exts,
+      excludeGlobs,
+      includeGlobs
+    );
 
     const outBlob = new Blob([output], { type: 'text/plain' });
     let downloadUrl: string;
@@ -156,7 +170,7 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
   if (msg.action === 'extract' && typeof msg.tabId === 'number') {
     chrome.tabs.get(msg.tabId, (tab) => {
       if (chrome.runtime.lastError || !tab) return;
-      runExtraction(tab, msg.extensions, msg.exclude);
+      runExtraction(tab, msg.extensions, msg.exclude, msg.include);
     });
   }
 });

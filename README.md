@@ -12,6 +12,12 @@ The Options page also lets you specify glob patterns for files to omit from the 
 Paths are matched relative to the repository root and the `file:` sections in the
 output use these same relative paths.
 
+### Repository Include Patterns
+
+From the popup you can define extra glob patterns for files to include on a
+per-repository basis. Files that match these patterns are collected even if their
+extensions are not listed above. Exclude patterns still take precedence.
+
 Click the extension icon while viewing a GitHub repository to download the text file. The repository archive is fetched from the branch shown in the URL if one is present, otherwise the repository's default branch is used. Branch names containing slashes are detected correctly. The download URL is logged to the extension's service worker console.
 
 ## Private Repositories

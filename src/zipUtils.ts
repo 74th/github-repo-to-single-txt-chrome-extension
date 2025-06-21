@@ -10,7 +10,8 @@ export async function extractTextFromZip(
   zip: JSZip,
   repoInfo: RepoInfo,
   exts: string[],
-  excludeGlobs: string[]
+  excludeGlobs: string[],
+  includeGlobs: string[] = []
 ): Promise<string> {
   const extRegex = new RegExp(
     `\.(${exts.map((e) => e.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")).join('|')})$`,
@@ -24,8 +25,12 @@ export async function extractTextFromZip(
   zip.forEach((relativePath: string, zipEntry: JSZipObject) => {
     if (zipEntry.dir) return;
     const trimmed = relativePath.replace(/^[^/]+\//, '');
-    if (!extRegex.test(trimmed)) return;
     if (excludeGlobs.some((p) => minimatch(trimmed, p))) return;
+    if (includeGlobs.some((p) => minimatch(trimmed, p))) {
+      entries.push({ path: trimmed, file: zipEntry });
+      return;
+    }
+    if (!extRegex.test(trimmed)) return;
     entries.push({ path: trimmed, file: zipEntry });
   });
 
