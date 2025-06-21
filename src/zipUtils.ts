@@ -31,26 +31,48 @@ export async function extractTextFromZip(
 
   entries.sort((a, b) => a.path.localeCompare(b.path));
 
-  const groups = new Map<string, Entry[]>();
-  for (const entry of entries) {
-    const idx = entry.path.lastIndexOf('/');
-    const dir = idx >= 0 ? entry.path.slice(0, idx) : '';
-    const arr = groups.get(dir) ?? [];
-    arr.push(entry);
-    groups.set(dir, arr);
+  interface Node {
+    files: Entry[];
+    dirs: Map<string, Node>;
   }
 
-  const ordered: Entry[] = [];
-  for (const dir of Array.from(groups.keys()).sort((a, b) => a.localeCompare(b))) {
-    const arr = groups.get(dir)!;
-    const readmeName = dir ? `${dir}/README.md` : 'README.md';
-    const i = arr.findIndex((e) => e.path.toLowerCase() === readmeName.toLowerCase());
-    if (i >= 0) {
-      const [r] = arr.splice(i, 1);
+  const rootNode: Node = { files: [], dirs: new Map() };
+
+  for (const entry of entries) {
+    const parts = entry.path.split('/');
+    let node = rootNode;
+    for (let i = 0; i < parts.length - 1; i++) {
+      const part = parts[i];
+      let child = node.dirs.get(part);
+      if (!child) {
+        child = { files: [], dirs: new Map() };
+        node.dirs.set(part, child);
+      }
+      node = child;
+    }
+    node.files.push(entry);
+  }
+
+  function collect(node: Node, prefix: string): Entry[] {
+    const arr = [...node.files].sort((a, b) => a.path.localeCompare(b.path));
+    const readmeName = prefix ? `${prefix}/README.md` : 'README.md';
+    const idx = arr.findIndex((e) => e.path.toLowerCase() === readmeName.toLowerCase());
+    if (idx >= 0) {
+      const [r] = arr.splice(idx, 1);
       arr.unshift(r);
     }
-    ordered.push(...arr);
+
+    const result: Entry[] = [...arr];
+    const subNames = Array.from(node.dirs.keys()).sort((a, b) => a.localeCompare(b));
+    for (const name of subNames) {
+      const child = node.dirs.get(name)!;
+      const childPrefix = prefix ? `${prefix}/${name}` : name;
+      result.push(...collect(child, childPrefix));
+    }
+    return result;
   }
+
+  const ordered = collect(rootNode, '');
 
   let output = `${repoInfo.full_name}\n${repoInfo.description || ''}\n\n`;
   for (const entry of ordered) {
