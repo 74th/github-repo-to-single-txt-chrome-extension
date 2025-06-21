@@ -16,3 +16,19 @@ test('README placed first', async () => {
   const firstHeader = output.split('\n').slice(2).join('\n').match(/file: ([^\n]+)/)?.[1];
   assert.equal(firstHeader, 'README.md');
 });
+
+test('root README prioritized over nested ones', async () => {
+  const zip = new JSZip();
+  zip.file('repo-main/adc/README.md', 'nested readme');
+  zip.file('repo-main/abc/main.c', 'int main(){}');
+  zip.file('repo-main/README.md', 'root');
+
+  const output = await extractTextFromZip(zip, repoInfo, ['md', 'c'], []);
+
+  const firstHeader = output
+    .split('\n')
+    .slice(2)
+    .join('\n')
+    .match(/file: ([^\n]+)/)?.[1];
+  assert.equal(firstHeader, 'README.md');
+});

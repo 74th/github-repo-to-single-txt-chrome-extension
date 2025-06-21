@@ -30,7 +30,10 @@ export async function extractTextFromZip(
   });
 
   entries.sort((a, b) => a.path.localeCompare(b.path));
-  const readmeIndex = entries.findIndex((e) => /(^|\/)README\.md$/i.test(e.path));
+  let readmeIndex = entries.findIndex((e) => /^README\.md$/i.test(e.path));
+  if (readmeIndex < 0) {
+    readmeIndex = entries.findIndex((e) => /(^|\/)README\.md$/i.test(e.path));
+  }
   if (readmeIndex >= 0) {
     const [readme] = entries.splice(readmeIndex, 1);
     entries.unshift(readme);
