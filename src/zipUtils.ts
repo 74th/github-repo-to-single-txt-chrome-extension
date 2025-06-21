@@ -54,9 +54,16 @@ export async function extractTextFromZip(
   }
 
   function collect(node: Node, prefix: string): Entry[] {
+    // Sort files alphabetically by their paths.
     const arr = [...node.files].sort((a, b) => a.path.localeCompare(b.path));
+    
+    // Construct the expected name for a README file in the current directory.
     const readmeName = prefix ? `${prefix}/README.md` : 'README.md';
+    
+    // Check if a README file exists in the current list of files.
     const idx = arr.findIndex((e) => e.path.toLowerCase() === readmeName.toLowerCase());
+    
+    // If a README file is found, move it to the front of the list to prioritize it.
     if (idx >= 0) {
       const [r] = arr.splice(idx, 1);
       arr.unshift(r);
