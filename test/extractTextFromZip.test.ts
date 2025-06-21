@@ -32,3 +32,15 @@ test('root README prioritized over nested ones', async () => {
     .match(/file: ([^\n]+)/)?.[1];
   assert.equal(firstHeader, 'README.md');
 });
+
+test('subdirectory README placed before other files in that directory', async () => {
+  const zip = new JSZip();
+  zip.file('repo-main/sub/a.js', 'aaa');
+  zip.file('repo-main/sub/README.md', 'sub readme');
+  zip.file('repo-main/sub/b.js', 'bbb');
+
+  const output = await extractTextFromZip(zip, repoInfo, ['js', 'md'], []);
+
+  const files = Array.from(output.matchAll(/file: ([^\n]+)/g)).map((m) => m[1]);
+  assert.deepEqual(files, ['sub/README.md', 'sub/a.js', 'sub/b.js']);
+});

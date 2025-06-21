@@ -30,17 +30,30 @@ export async function extractTextFromZip(
   });
 
   entries.sort((a, b) => a.path.localeCompare(b.path));
-  let readmeIndex = entries.findIndex((e) => /^README\.md$/i.test(e.path));
-  if (readmeIndex < 0) {
-    readmeIndex = entries.findIndex((e) => /(^|\/)README\.md$/i.test(e.path));
+
+  const groups = new Map<string, Entry[]>();
+  for (const entry of entries) {
+    const idx = entry.path.lastIndexOf('/');
+    const dir = idx >= 0 ? entry.path.slice(0, idx) : '';
+    const arr = groups.get(dir) ?? [];
+    arr.push(entry);
+    groups.set(dir, arr);
   }
-  if (readmeIndex >= 0) {
-    const [readme] = entries.splice(readmeIndex, 1);
-    entries.unshift(readme);
+
+  const ordered: Entry[] = [];
+  for (const dir of Array.from(groups.keys()).sort((a, b) => a.localeCompare(b))) {
+    const arr = groups.get(dir)!;
+    const readmeName = dir ? `${dir}/README.md` : 'README.md';
+    const i = arr.findIndex((e) => e.path.toLowerCase() === readmeName.toLowerCase());
+    if (i >= 0) {
+      const [r] = arr.splice(i, 1);
+      arr.unshift(r);
+    }
+    ordered.push(...arr);
   }
 
   let output = `${repoInfo.full_name}\n${repoInfo.description || ''}\n\n`;
-  for (const entry of entries) {
+  for (const entry of ordered) {
     const text = await entry.file.async('text');
     output += `---\nfile: ${entry.path}\n---\n${text}\n\n`;
   }
