@@ -13,7 +13,7 @@ test('README placed first', async () => {
 
   const output = await extractTextFromZip(zip, repoInfo, ['js', 'md'], []);
 
-  const firstHeader = output.split('\n').slice(2).join('\n').match(/file: ([^\n]+)/)?.[1];
+  const firstHeader = output.match(/file: ([^\n]+)/)?.[1];
   assert.equal(firstHeader, 'README.md');
 });
 
@@ -25,11 +25,7 @@ test('root README prioritized over nested ones', async () => {
 
   const output = await extractTextFromZip(zip, repoInfo, ['md', 'c'], []);
 
-  const firstHeader = output
-    .split('\n')
-    .slice(2)
-    .join('\n')
-    .match(/file: ([^\n]+)/)?.[1];
+  const firstHeader = output.match(/file: ([^\n]+)/)?.[1];
   assert.equal(firstHeader, 'README.md');
 });
 
@@ -60,5 +56,26 @@ test('deeply nested README placed before files under that directory', async () =
     'a/b/README.md',
     'a/b/c/README.md',
     'a/b/c/file.js',
+  ]);
+});
+
+test('file tree is printed at top of output', async () => {
+  const zip = new JSZip();
+  zip.file('repo-main/src/a.js', 'aaa');
+  zip.file('repo-main/README.md', 'readme');
+
+  const output = await extractTextFromZip(zip, repoInfo, ['js', 'md'], []);
+
+  const preFile = output.split('---')[0].trim();
+  const lines = preFile
+    .split('\n')
+    .slice(2)
+    .filter((l) => l.trim() !== ''); // skip repo name/description and blanks
+
+  assert.deepEqual(lines, [
+    '.',
+    '├── README.md',
+    '└── src',
+    '    └── a.js',
   ]);
 });
