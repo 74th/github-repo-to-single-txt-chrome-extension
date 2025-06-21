@@ -1,6 +1,6 @@
 # GitHub Repo Single Text Exporter
 
-This Chrome extension downloads the current GitHub repository as a ZIP file, extracts text-based files, and combines them into a single file. By default common programming languages are included such as `.py`, `.js`, `.ts`, `.jsx`, `.tsx`, `.go`, `.java`, `.c`, `.cpp`, `.cs`, `.rb`, `.rs`, `.php`, `.kt`, `.swift`, `.sh`, `.md`, and `.txt`. If `README.md` exists it is placed first, followed by the remaining files in alphabetical order. The list of extensions can be customised from the extension's options page. The generated text begins with the repository's full name and description.
+This Chrome extension downloads the current GitHub repository as a ZIP file, extracts text-based files, and combines them into a single file. By default common programming languages are included such as `.py`, `.js`, `.ts`, `.jsx`, `.tsx`, `.go`, `.java`, `.c`, `.cpp`, `.cs`, `.rb`, `.rs`, `.php`, `.kt`, `.swift`, `.sh`, `.md`, and `.txt`. If a `README.md` file is present it is placed first at the repository root and at the start of any subdirectories, with all other files sorted alphabetically. The list of extensions can be customised from the extension's options page. The generated text begins with the repository's full name and description.
 
 ## Custom File Extensions
 
