@@ -35,4 +35,4 @@ npm install
 npm run package
 ```
 
-`npm run package` creates `extension.zip` containing the compiled background script and `manifest.json`. Load this ZIP (after extracting) as an unpacked extension in Chrome.
+`npm run package` creates `github-repo-to-single-txt-extension.zip` containing the compiled background script and `manifest.json`. Load this ZIP (after extracting) as an unpacked extension in Chrome. You can also download this pre-built ZIP from the repository's Releases page.
