@@ -187,3 +187,38 @@ test('chunks maintain file boundaries', async () => {
     }
   }
 });
+
+test('large content creates multiple chunks with proper naming', async () => {
+  const zip = new JSZip();
+  const largeContent = 'X'.repeat(1024 * 1024); // 1MB per file
+  
+  // Create 6 files with 1MB each to exceed 5MB limit  
+  for (let i = 1; i <= 6; i++) {
+    zip.file(`repo-main/file${i}.txt`, largeContent);
+  }
+
+  const chunks = [];
+  for await (const chunk of extractTextFromZipChunked(zip, repoInfo, ['txt'], [], [], 5 * 1024 * 1024)) {
+    chunks.push(chunk);
+  }
+
+  console.log(`Generated ${chunks.length} chunks for large content test`);
+  
+  // Should create multiple chunks for large content
+  assert.ok(chunks.length >= 2, `Expected multiple chunks, got ${chunks.length}`);
+  
+  // First chunk should have proper header
+  assert.match(chunks[0].content, /owner\/repo/);
+  assert.equal(chunks[0].chunkIndex, 1);
+  assert.equal(chunks[0].isLast, false);
+  
+  // Last chunk should be marked as last
+  const lastChunk = chunks[chunks.length - 1];
+  assert.equal(lastChunk.isLast, true);
+  assert.equal(lastChunk.chunkIndex, chunks.length);
+  
+  // Continuation chunks should have proper headers
+  if (chunks.length > 1) {
+    assert.match(chunks[1].content, /continued - part 2/);
+  }
+});
