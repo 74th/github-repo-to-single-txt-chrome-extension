@@ -1,4 +1,4 @@
-import { extractTextFromZip } from './zipUtils.js';
+import { extractTextFromZipChunked } from './zipUtils.js';
 
 async function getToken(tabId: number): Promise<string | undefined> {
   const stored = await chrome.storage.local.get('token');
@@ -136,27 +136,42 @@ async function runExtraction(
         .filter(Boolean);
     }
 
-    const output = await extractTextFromZip(
+    // Process files in chunks and download each chunk separately
+    let downloadCount = 0;
+    
+    for await (const chunk of extractTextFromZipChunked(
       zip,
       repoInfo,
       exts,
       excludeGlobs,
       includeGlobs
-    );
-
-    const outBlob = new Blob([output], { type: 'text/plain' });
-    let downloadUrl: string;
-    if (typeof URL.createObjectURL === 'function') {
-      downloadUrl = URL.createObjectURL(outBlob);
-    } else {
-      const buf = await outBlob.arrayBuffer();
-      let binary = '';
-      const bytes = new Uint8Array(buf);
-      for (const b of bytes) binary += String.fromCharCode(b);
-      const base64 = btoa(binary);
-      downloadUrl = `data:text/plain;base64,${base64}`;
+    )) {
+      const outBlob = new Blob([chunk.content], { type: 'text/plain' });
+      let downloadUrl: string;
+      if (typeof URL.createObjectURL === 'function') {
+        downloadUrl = URL.createObjectURL(outBlob);
+      } else {
+        const buf = await outBlob.arrayBuffer();
+        let binary = '';
+        const bytes = new Uint8Array(buf);
+        for (const b of bytes) binary += String.fromCharCode(b);
+        const base64 = btoa(binary);
+        downloadUrl = `data:text/plain;base64,${base64}`;
+      }
+      
+      // Generate filename - use numbering for multiple chunks
+      const filename = chunk.chunkIndex === 1 && chunk.isLast 
+        ? `${repo}.txt` 
+        : `${repo}-${chunk.chunkIndex}.txt`;
+      
+      chrome.downloads.download({ url: downloadUrl, filename, saveAs: downloadCount === 0 });
+      downloadCount++;
+      
+      // Small delay between downloads to prevent issues
+      if (!chunk.isLast) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
     }
-    chrome.downloads.download({ url: downloadUrl, filename: `${repo}.txt`, saveAs: true });
   } catch (err: any) {
     await chrome.scripting.executeScript({
       target: { tabId: tab.id! },
