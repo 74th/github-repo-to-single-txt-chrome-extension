@@ -6,13 +6,20 @@ export interface RepoInfo {
   description?: string;
 }
 
-export async function extractTextFromZip(
+export interface FileChunk {
+  content: string;
+  isLast: boolean;
+  chunkIndex: number;
+}
+
+export async function* extractTextFromZipChunked(
   zip: JSZip,
   repoInfo: RepoInfo,
   exts: string[],
   excludeGlobs: string[],
-  includeGlobs: string[] = []
-): Promise<string> {
+  includeGlobs: string[] = [],
+  maxChunkSizeBytes: number = 5 * 1024 * 1024 // 5MB default
+): AsyncGenerator<FileChunk, void, unknown> {
   const extRegex = new RegExp(
     `\.(${exts.map((e) => e.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")).join('|')})$`,
     'i'
@@ -110,10 +117,59 @@ export async function extractTextFromZip(
 
   const treeLines = ['.', ...buildTreeLines(rootNode)];
 
-  let output = `${repoInfo.full_name}\n${repoInfo.description || ''}\n\n${treeLines.join('\n')}\n\n`;
-  for (const entry of ordered) {
-    const text = await entry.file.async('text');
-    output += `---\nfile: ${entry.path}\n---\n${text}\n\n`;
+  let currentChunk = '';
+  let chunkIndex = 1;
+  
+  // Add header only to first chunk
+  const header = `${repoInfo.full_name}\n${repoInfo.description || ''}\n\n${treeLines.join('\n')}\n\n`;
+  currentChunk = header;
+
+  function getByteLength(str: string): number {
+    return new TextEncoder().encode(str).length;
   }
-  return output;
+
+  for (let i = 0; i < ordered.length; i++) {
+    const entry = ordered[i];
+    const text = await entry.file.async('text');
+    const fileContent = `---\nfile: ${entry.path}\n---\n${text}\n\n`;
+    
+    // Check if adding this file would exceed the limit
+    const newLength = getByteLength(currentChunk + fileContent);
+    
+    if (newLength > maxChunkSizeBytes && currentChunk.length > header.length) {
+      // Yield current chunk and start a new one
+      yield {
+        content: currentChunk,
+        isLast: false,
+        chunkIndex: chunkIndex++
+      };
+      
+      // Start new chunk with continuation header
+      currentChunk = `${repoInfo.full_name} (continued - part ${chunkIndex})\n\n`;
+    }
+    
+    currentChunk += fileContent;
+  }
+
+  // Yield the final chunk
+  yield {
+    content: currentChunk,
+    isLast: true,
+    chunkIndex: chunkIndex
+  };
+}
+
+export async function extractTextFromZip(
+  zip: JSZip,
+  repoInfo: RepoInfo,
+  exts: string[],
+  excludeGlobs: string[],
+  includeGlobs: string[] = []
+): Promise<string> {
+  // Use the chunked version with a very large limit to get single file behavior
+  const chunks = [];
+  for await (const chunk of extractTextFromZipChunked(zip, repoInfo, exts, excludeGlobs, includeGlobs, Number.MAX_SAFE_INTEGER)) {
+    chunks.push(chunk.content);
+  }
+  return chunks.join('');
 }
