@@ -25,6 +25,32 @@ async function init() {
   const extArea = document.getElementById('exts') as HTMLTextAreaElement;
   const exArea = document.getElementById('exclude') as HTMLTextAreaElement;
   const incArea = document.getElementById('include') as HTMLTextAreaElement;
+  const progressDiv = document.getElementById('progress') as HTMLDivElement;
+
+  function displayProgress(data: any) {
+    if (!data) {
+      progressDiv.textContent = '';
+      return;
+    }
+    if (data.status === 'working') {
+      progressDiv.textContent = `Processing... ${Math.round(
+        (data.progress || 0) * 100
+      )}%`;
+    } else if (data.status === 'done') {
+      progressDiv.textContent = 'Completed';
+    } else {
+      progressDiv.textContent = '';
+    }
+  }
+
+  const stored = await chrome.storage.local.get('exportProgress');
+  displayProgress(stored.exportProgress);
+
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes.exportProgress) {
+      displayProgress(changes.exportProgress.newValue);
+    }
+  });
 
   const repoVals = (repoSettings && repoSettings[repoFull]) || {};
   extArea.value =
@@ -51,6 +77,7 @@ async function init() {
       exclude: newEx,
       include: newInc,
     });
+    progressDiv.textContent = 'Processing... 0%';
     window.close();
   });
 }

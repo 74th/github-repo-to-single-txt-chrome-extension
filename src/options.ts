@@ -1,7 +1,8 @@
 async function loadOptions() {
-  const { extensions, exclude } = await chrome.storage.local.get([
+  const { extensions, exclude, chunkSizeMB } = await chrome.storage.local.get([
     'extensions',
     'exclude',
+    'chunkSizeMB',
   ]);
   const extArea = document.getElementById('exts') as HTMLTextAreaElement;
   extArea.value =
@@ -11,12 +12,19 @@ async function loadOptions() {
   exArea.value =
     exclude ||
     '.vscode/**\n.github/**\nnode_modules/**\ndist/**\nbuild/**';
+  const chunkInput = document.getElementById('chunkSizeMB') as HTMLInputElement;
+  chunkInput.value = String(chunkSizeMB || 3);
 }
 
 async function saveOptions() {
   const extArea = document.getElementById('exts') as HTMLTextAreaElement;
   const exArea = document.getElementById('exclude') as HTMLTextAreaElement;
-  await chrome.storage.local.set({ extensions: extArea.value, exclude: exArea.value });
+  const chunkInput = document.getElementById('chunkSizeMB') as HTMLInputElement;
+  await chrome.storage.local.set({
+    extensions: extArea.value,
+    exclude: exArea.value,
+    chunkSizeMB: parseFloat(chunkInput.value) || 3,
+  });
   alert('Saved');
 }
 

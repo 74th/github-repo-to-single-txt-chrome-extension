@@ -24,6 +24,13 @@ async function runExtraction(
   includeValue: string
 ) {
   try {
+    const { chunkSizeMB } = await chrome.storage.local.get('chunkSizeMB');
+    const chunkSizeBytes =
+      (parseFloat(chunkSizeMB) || 3) * 1024 * 1024;
+
+    await chrome.storage.local.set({
+      exportProgress: { status: 'working', progress: 0 },
+    });
     const pageUrl = new URL(tab.url || '');
     if (pageUrl.hostname !== 'github.com') {
       await chrome.scripting.executeScript({
@@ -144,7 +151,8 @@ async function runExtraction(
       repoInfo,
       exts,
       excludeGlobs,
-      includeGlobs
+      includeGlobs,
+      chunkSizeBytes
     )) {
       const outBlob = new Blob([chunk.content], { type: 'text/plain' });
       let downloadUrl: string;
@@ -166,17 +174,27 @@ async function runExtraction(
       
       chrome.downloads.download({ url: downloadUrl, filename, saveAs: downloadCount === 0 });
       downloadCount++;
-      
+
       // Small delay between downloads to prevent issues
       if (!chunk.isLast) {
         await new Promise(resolve => setTimeout(resolve, 100));
       }
+
+      await chrome.storage.local.set({
+        exportProgress: {
+          status: chunk.isLast ? 'done' : 'working',
+          progress: chunk.progress,
+        },
+      });
     }
   } catch (err: any) {
     await chrome.scripting.executeScript({
       target: { tabId: tab.id! },
       func: (msg: string) => alert(msg),
       args: [err.message],
+    });
+    await chrome.storage.local.set({
+      exportProgress: { status: 'idle', progress: 0 },
     });
   }
 }

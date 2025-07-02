@@ -10,6 +10,7 @@ export interface FileChunk {
   content: string;
   isLast: boolean;
   chunkIndex: number;
+  progress: number;
 }
 
 export async function* extractTextFromZipChunked(
@@ -119,6 +120,7 @@ export async function* extractTextFromZipChunked(
 
   let currentChunk = '';
   let chunkIndex = 1;
+  let processedFiles = 0;
   
   // Add header only to first chunk
   const header = `${repoInfo.full_name}\n${repoInfo.description || ''}\n\n${treeLines.join('\n')}\n\n`;
@@ -127,6 +129,8 @@ export async function* extractTextFromZipChunked(
   function getByteLength(str: string): number {
     return new TextEncoder().encode(str).length;
   }
+
+  const totalFiles = ordered.length;
 
   for (let i = 0; i < ordered.length; i++) {
     const entry = ordered[i];
@@ -141,21 +145,24 @@ export async function* extractTextFromZipChunked(
       yield {
         content: currentChunk,
         isLast: false,
-        chunkIndex: chunkIndex++
+        chunkIndex: chunkIndex++,
+        progress: processedFiles / totalFiles
       };
-      
+
       // Start new chunk with continuation header
       currentChunk = `${repoInfo.full_name} (continued - part ${chunkIndex})\n\n`;
     }
-    
+
     currentChunk += fileContent;
+    processedFiles++;
   }
 
   // Yield the final chunk
   yield {
     content: currentChunk,
     isLast: true,
-    chunkIndex: chunkIndex
+    chunkIndex: chunkIndex,
+    progress: 1
   };
 }
 
