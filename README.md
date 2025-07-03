@@ -11,6 +11,7 @@ Use the Options page to specify which file extensions should be collected when e
 ### Exclude Files
 
 The Options page also lets you specify glob patterns for files to omit from the export. By default `.vscode/**`, `.github/**`, `node_modules/**`, `dist/**`, and `build/**` are excluded. Enter one pattern per line using [minimatch](https://github.com/isaacs/minimatch) syntax to customise the list.
+You can also configure the maximum size of each output file in megabytes. The default is 2MB.
 Paths are matched relative to the repository root and the `file:` sections in the
 output use these same relative paths.
 
