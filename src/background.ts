@@ -26,7 +26,7 @@ async function runExtraction(
   try {
     const { chunkSizeMB } = await chrome.storage.local.get('chunkSizeMB');
     const chunkSizeBytes =
-      (parseFloat(chunkSizeMB) || 3) * 1024 * 1024;
+      (parseFloat(chunkSizeMB) || 2) * 1024 * 1024;
 
     await chrome.storage.local.set({
       exportProgress: { status: 'working', progress: 0 },

@@ -19,7 +19,7 @@ export async function* extractTextFromZipChunked(
   exts: string[],
   excludeGlobs: string[],
   includeGlobs: string[] = [],
-  maxChunkSizeBytes: number = 5 * 1024 * 1024 // 5MB default
+  maxChunkSizeBytes: number = 2 * 1024 * 1024 // 2MB default
 ): AsyncGenerator<FileChunk, void, unknown> {
   const extRegex = new RegExp(
     `\.(${exts.map((e) => e.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")).join('|')})$`,

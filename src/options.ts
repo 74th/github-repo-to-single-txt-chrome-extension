@@ -13,7 +13,7 @@ async function loadOptions() {
     exclude ||
     '.vscode/**\n.github/**\nnode_modules/**\ndist/**\nbuild/**';
   const chunkInput = document.getElementById('chunkSizeMB') as HTMLInputElement;
-  chunkInput.value = String(chunkSizeMB || 3);
+  chunkInput.value = String(chunkSizeMB || 2);
 }
 
 async function saveOptions() {
@@ -23,7 +23,7 @@ async function saveOptions() {
   await chrome.storage.local.set({
     extensions: extArea.value,
     exclude: exArea.value,
-    chunkSizeMB: parseFloat(chunkInput.value) || 3,
+    chunkSizeMB: parseFloat(chunkInput.value) || 2,
   });
   alert('Saved');
 }
