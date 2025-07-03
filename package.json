@@ -1,6 +1,6 @@
 {
   "name": "github-single-txt-chrome-extension",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "This Chrome extension downloads the current GitHub repository as a ZIP file, extracts `.py`, `.go`, `.md`, and `.txt` files, and combines them into a single text file. If a `README.md` file is present it is placed first at the repository root and at the start of any subdirectories, with all other files sorted alphabetically.",
   "type": "module",
   "scripts": {
